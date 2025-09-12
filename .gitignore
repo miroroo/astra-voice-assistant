@@ -1,0 +1,86 @@
+# Игнорируем ВСЕ большие модели и датасеты по умолчанию
+# Их нужно скачивать отдельно через scripts/install_models.sh
+resources/models/
+
+# Игнорируем папку с обученными моделями Rasa
+# (они генерируются автоматически при обучении)
+rasa_assistant/models/
+
+# Файлы с чувствительными данными (API keys, пароли)
+.env
+config/*.key
+config/*.token
+config/*.secret
+config/local.yaml  # Локальные переопределения конфига
+
+# Файлы с кредами от Rasa
+rasa_assistant/credentials.yml
+
+# Файлы операционных систем
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Виртуальные окружения (все возможные варианты)
+.venv/
+venv/
+env/
+ENV/
+
+# Логи приложений
+*.log
+logs/
+
+# Файлы IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Файлы кэша и временные файлы
+.cache/
+.pytest_cache/
+.mypy_cache/
+.rasa/cache/
+
+# Jupyter Notebook (на случай, если ML-инженер для анализа)
+.ipynb_checkpoints/
+
+# Временные файлы, создаваемые при сборке UI (PyQt)
+ui/resources_rc.py   # Скомпилированные ресурсы (их генерируют)
+ui/*.ui              # Исходные XML-файлы Qt Designer (их можно коммитить)
+
+# Коverage reports
+htmlcov/
+.coverage
+.coverage.*
