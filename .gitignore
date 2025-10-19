@@ -84,3 +84,6 @@ ui/*.ui              # Исходные XML-файлы Qt Designer (их мож�
 htmlcov/
 .coverage
 .coverage.*
+
+
+launch.bat

@@ -3,24 +3,18 @@ from src.manager import AstraManager
 
 async def main():
     """Главная функция приложения."""
+    astra_manager = AstraManager()
     try:
-        # Создаем и запускаем ядро
-        astra_core = AstraManager()
-        await astra_core.start()
-        print(f"Текущее состояние: {astra_core.get_state()}")
-        
-        # Главный цикл (можно заменить на что-то более сложное)
-        while astra_core.core._running:
-            await asyncio.sleep(1)
-            
+        await astra_manager.start()
+        # Ждем завершения работы ядра
+        while astra_manager.core._running:
+            await asyncio.sleep(0.1)
     except KeyboardInterrupt:
         print("\nЗавершение работы по запросу пользователя")
     except Exception as e:
         print(f"Ошибка: {e}")
     finally:
-        if "astra_core" in locals():
-            await astra_core.core.shutdown()
-
+        await astra_manager.stop()
 
 if __name__ == "__main__":
     asyncio.run(main())
