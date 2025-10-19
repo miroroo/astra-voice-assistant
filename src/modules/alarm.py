@@ -177,6 +177,7 @@ class AlarmModule(Module):
         return f"✅ Отменено будильников: {cancelled}"
     
     async def _show_alarms(self) -> str:
+        """Возвразает пользователю количество будильников и на какое время они установлены"""
         if not self.active_alarms:
             return "Нет активных будильников"
         

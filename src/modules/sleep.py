@@ -17,7 +17,7 @@ class SleepModule(Module):
     async def can_handle(self, command: str) -> bool:
         sleep_commands = [
             "выключись", "отключись", "заверши работу", "закройся", 
-            "стоп", "остановись", "спокойной ночи", "усни", "перейди в режим сна"
+            "стоп", "остановись", "спокойной ночи", "добройн ночи","усни", "перейди в режим сна"
         ]
         normalized_command = command.lower()
         
