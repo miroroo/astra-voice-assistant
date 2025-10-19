@@ -1,15 +1,29 @@
-from src.modules.introducig import IntroducingModule
+from .introducing import IntroducingModule
+from .alarm import AlarmModule
+from .sleep import SleepModule
+from typing import List, Type
+from src.modules.module import Module
 
+def get_all_modules() -> List[Type[Module]]:
+    """Возвращает список всех модулей для регистрации."""
+    return [
+        IntroducingModule,
+        AlarmModule,
+        SleepModule,
+    ]
 
-def register_all_modules(module_manager):
+def register_all_modules(astra_manager):
     """Регистрирует все модули в менеджере модулей."""
+    module_classes = get_all_modules()
     
-    # Регистрируем модуль представления
-    introducing_module = IntroducingModule(system_name="Астра", version="1.0")
-    module_manager.register_module(introducing_module)
+    registered_modules = []
+    for module_class in module_classes:
+        try:
+            module_instance = module_class(astra_manager)
+            astra_manager.module_manager.register_module(module_instance)
+            registered_modules.append(module_instance.get_name())
+        except Exception as e:
+            print(f"[Registry] Ошибка при регистрации модуля {module_class.__name__}: {e}")
     
-    # Регистрируйте другие модули здесь
-    # weather_module = WeatherModule()
-    # module_manager.register_module(weather_module)
-    
-    print(f"[Registry] Всего зарегистрировано модулей: {len(module_manager.modules)}")
+    print(f"[Registry] Успешно зарегистрировано модулей: {len(registered_modules)}")
+    # print(f"[Registry] Модули: {', '.join(registered_modules)}")
