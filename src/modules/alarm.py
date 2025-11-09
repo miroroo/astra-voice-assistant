@@ -341,7 +341,7 @@ class AlarmModule(Module):
         
         if not time_match:
             self.state_manager.set_active_context(self.get_name(), priority=10, timeout_seconds=60)
-            return "Не понял время. На какое время установить будильник? Например: 'на 15:30' или 'через 10 минут'"
+            return "Не понял время. На какое время установить будильник?"
         
         try:
             alarm_time = self._parse_time(time_match, command)

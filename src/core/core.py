@@ -34,7 +34,7 @@ class Core:
     async def _on_alarm_triggered(self, data):
         """Обработчик срабатывания будильника."""
         message = data.get("message", "Будильник!")
-        print(f"{message}")
+        self.astra_manager.speak(f"{message}")
         
         # Временное пробуждение для показа уведомления
         current_state = self.state_manager.get_state()
@@ -111,7 +111,7 @@ class Core:
             if self.command:
                 print(f"[Core] Обработка команды: {self.command}")
                 result = await self.module_manager.execute_command(self.command)
-                print(f"[Core] Результат обработки: {result}")
+                self.astra_manager.speak(result)
                 
                 self.last_dialog_time = time.time()
                 print(f"[Core] Время диалога обновлено: {self.last_dialog_time}")

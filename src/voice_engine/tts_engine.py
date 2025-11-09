@@ -47,8 +47,3 @@ class TTSModule:
         engine.stop()
         del engine  # гарантируем очистку ресурсов
 
-
-if __name__ == "__main__":
-    tts = TTSModule()
-    tts.say("Привет, я голос Астры!")
-    tts.say("Привет, это снова я!")

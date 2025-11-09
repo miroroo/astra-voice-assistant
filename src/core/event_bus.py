@@ -8,7 +8,7 @@ class EventBus:
         self._max_history = 100  # Максимальное количество событий в истории
 
     def subscribe(self, event_type: str, callback: Callable):
-        # print(f"[DEBUG] Подписка на '{event_type}': {callback} (тип: {type(callback).__name__})")
+
     
         if not callable(callback):
             print(f"[ERROR] Callback для события '{event_type}' не является вызываемым! Тип: {type(callback)}")
@@ -27,20 +27,18 @@ class EventBus:
 
     async def publish_async(self, event_type: str, *args, **kwargs):
         """Асинхронная публикация события"""
-        # Сохраняем в историю
-        # print(f"[DEBUG] Публикация события: {event_type}")
+
         self._event_history.append({
             "type": event_type,
             "timestamp": asyncio.get_event_loop().time(),
             "args": args,
             "kwargs": kwargs
         })
-        # Ограничиваем размер истории
+
         if len(self._event_history) > self._max_history:
             self._event_history.pop(0)
 
         if event_type in self._subscribers:
-            # print(f"[DEBUG] Найдено подписчиков: {len(self._subscribers[event_type])}")
             for callback in self._subscribers[event_type]:
                 try:
                     if asyncio.iscoroutinefunction(callback):

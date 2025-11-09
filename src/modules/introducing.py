@@ -18,10 +18,10 @@ class IntroducingModule(Module):
         normalized_command = command.lower()
         
         if any(phrase in normalized_command for phrase in self.greeting_phrases):
-            return f"{self.system_name}: Привет! Я {self.system_name}, ваша голосовая ассистентка. Чем могу помочь?"
+            return f"Привет! Я {self.system_name}, ваша голосовая ассистентка. Чем могу помочь?"
         
         if any(phrase in normalized_command for phrase in self.about_phrases):
-            return (f"{self.system_name}: Я голосовой ассистент {self.system_name} версии {self.version}. "
+            return (f"Я голосовой ассистент {self.system_name} версии {self.version}. "
                     "Я могу отвечать на вопросы, выполнять команды и помогать с различными задачами.")
         
         return f"{self.system_name}: Рада вас слышать! Чем могу помочь?"
