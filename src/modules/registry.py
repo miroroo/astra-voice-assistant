@@ -1,3 +1,5 @@
+from src.modules.system import SystemModule
+from src.modules.weather import WeatherModule
 from .introducing import IntroducingModule
 from .alarm import AlarmModule
 from .sleep import SleepModule
@@ -10,6 +12,8 @@ def get_all_modules() -> List[Type[Module]]:
         IntroducingModule,
         AlarmModule,
         SleepModule,
+        WeatherModule,
+        SystemModule,
     ]
 
 def register_all_modules(astra_manager):

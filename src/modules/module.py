@@ -14,10 +14,6 @@ class Module(ABC):
     async def execute(self, command: str) -> str:
         pass
     
-    async def on_context_cleared(self, module_name: str):
-        """Вызывается при очистке контекста модуля. Может быть переопределен."""
-        pass
-    
     def get_name(self) -> str:
         """Возвращает имя модуля. По умолчанию используется имя класса."""
         return self.__class__.__name__
