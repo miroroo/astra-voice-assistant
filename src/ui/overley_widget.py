@@ -51,6 +51,6 @@ class TextWindow(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = TextWindow()
-    win.update_text("привет, Астра!")
+    #win.update_text("привет, Астра!")
     win.show()
     sys.exit(app.exec())
