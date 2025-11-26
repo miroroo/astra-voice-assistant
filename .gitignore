@@ -1,3 +1,6 @@
+# Игнорируем воск модель
+src/voice_engine/models/
+
 # Игнорируем ВСЕ большие модели и датасеты по умолчанию
 # Их нужно скачивать отдельно через scripts/install_models.sh
 resources/models/
