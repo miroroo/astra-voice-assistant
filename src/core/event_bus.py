@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Dict, List, Callable, Any
                  
 class EventBus:
@@ -6,12 +7,11 @@ class EventBus:
         self._subscribers: Dict[str, List[Callable]] = {}
         self._event_history: List[Dict[str, Any]] = []  # История событий для отладки
         self._max_history = 100  # Максимальное количество событий в истории
+        self.logger = logging.getLogger(__name__)
 
     def subscribe(self, event_type: str, callback: Callable):
-
-    
         if not callable(callback):
-            print(f"[ERROR] Callback для события '{event_type}' не является вызываемым! Тип: {type(callback)}")
+            self.logger.critical(f"[ERROR] Callback для события '{event_type}' не является вызываемым! Тип: {type(callback)}")
             raise TypeError(f"Callback must be callable, got {type(callback)}")
     
         if event_type not in self._subscribers:
@@ -47,7 +47,7 @@ class EventBus:
                         loop = asyncio.get_event_loop()
                         await loop.run_in_executor(None, callback, *args, **kwargs)
                 except Exception as e:
-                    print(f"Ошибка в обработчике {event_type}: {e}")
+                    self.logger.critical(f"Ошибка в обработчике {event_type}: {e}")
 
     def publish(self, event_type: str, *args, **kwargs):
         """Синхронная публикация события (для случаев когда нельзя использовать await)"""

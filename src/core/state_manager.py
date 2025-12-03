@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from src.core.event_bus import EventBus
 import time
 from typing import Dict, Any, Optional, Set
@@ -21,7 +22,6 @@ class StateManager:
             self.PROCESSING: [self.LISTENING, self.SLEEP],
         }
 
-        # Новая структура контекстов
         self._active_contexts: Dict[str, int] = {}
         self._module_data: Dict[str, Dict[str, Any]] = {}
         self._context_timestamps: Dict[str, float] = {}
@@ -37,6 +37,7 @@ class StateManager:
         
         self.DEFAULT_CONTEXT_TIMEOUT = 2 * 60 * 60
         self.SHORT_CONTEXT_TIMEOUT = 10 * 60
+        self.logger = logging.getLogger(__name__)
     
     def can_transition_to(self, new_state: str) -> bool:
         """Метод проверки возможности перехода между состояниями."""
@@ -49,8 +50,9 @@ class StateManager:
         
         old_state = self.current_state
         self.current_state = new_state
-
-        print(f"[StateManager] {old_state} → {new_state}")
+        
+        if old_state != new_state:
+            self.logger.info(f"[StateManager] {old_state} → {new_state}")
         
         # Публикуем события о смене состояния
         await self.event_bus.publish_async(f"state_{old_state}_exit")
@@ -164,7 +166,7 @@ class StateManager:
         """Очищает все контексты и данные."""
         self.clear_active_context()
         self._module_data.clear()
-        print("[StateManager] Все контексты очищены")
+        self.logger.info("[StateManager] Все контексты очищены")
 
     def _clean_expired_contexts(self) -> None:
         """Очищает просроченные контексты."""
