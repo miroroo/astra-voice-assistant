@@ -1,25 +1,40 @@
 import asyncio
 import requests
-import os
 from typing import Dict, Optional, Any
 from .module import Module
+from ..config.api_config import OPENWEATHER_API_KEY
 
 class WeatherModule(Module):
     """Модуль для получения информации о погоде."""
     
     def __init__(self, astra_manager):
         super().__init__(astra_manager)
-        self.api_key = os.getenv('OPENWEATHER_API_KEY', 'fd239c8c5a026acdf794ef98ae179527')
+        self.api_key = OPENWEATHER_API_KEY
+        self.state_manager = self.astra_manager.get_state_manager()
         self.base_url = "http://api.openweathermap.org/data/2.5/weather"
-
-    async def can_handle(self, command: str) -> bool:
-        """Проверяет, может ли модуль обработать команду."""
-        weather_commands = [
+        self.weather_commands = [
             'погода', 'weather', 'температура', 'прогноз', 
             'какая погода', 'сколько градусов', 'холодно', 'жарко'
         ]
-        normalized_command = command.lower()
-        return any(cmd in normalized_command for cmd in weather_commands)
+        self.module_name = self.get_name()
+        self.event_bus = self.astra_manager.get_event_bus()
+        self.event_bus.subscribe("context_cleared", self.on_context_cleared)
+    
+    async def on_context_cleared(self, module_name: str):
+        if self.module_name == self.get_name():
+            pass
+    
+    async def can_handle(self, command: str) -> bool:
+        if any(cmd in command for cmd in self.weather_commands):
+            # Активируем контекст системного модуля с высоким приоритетом
+            self.state_manager.set_active_context(
+                self.module_name, 
+                priority=10,  # Высокий приоритет для системных команд
+                context_type="system",
+                timeout_seconds=300  # 5 минут
+            )
+            return True
+        return False
 
     async def execute(self, command: str) -> str:
         """Выполняет команду погоды."""
@@ -32,22 +47,21 @@ class WeatherModule(Module):
 
     def _extract_city(self, command: str) -> Optional[str]:
         """Извлекает название города из команды."""
-        command_lower = command.lower()
         
         # Паттерны для извлечения города
         patterns = [
-            'погода в ',
-            'погода ',
-            'погода в городе'
-            'weather in ',
-            'weather ',
-            'температура в ',
-            'температура '
+        'погода в городе ',
+        'погода в ',
+        'weather in ',
+        'погода ',
+        'weather ',
+        'температура в ',
+        'температура '
         ]
         
         for pattern in patterns:
-            if pattern in command_lower:
-                start_index = command_lower.find(pattern) + len(pattern)
+            if pattern in command:
+                start_index = command.find(pattern) + len(pattern)
                 city = command[start_index:].strip()
                 # Убираем лишние слова в конце
                 city = city.split(' ')[0]
@@ -143,7 +157,7 @@ class WeatherModule(Module):
         wind_speed = weather_data['wind_speed']
 
         response = (
-            f"Погода в {city}, {country}:\n"
+            f"Погода в городе {city}:\n"
             f"• {description}\n"
             f"• Температура: {temp}°C (ощущается как {feels_like}°C)\n"
             f"• Влажность: {humidity}%\n"

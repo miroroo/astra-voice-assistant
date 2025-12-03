@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import os
 import platform
 import pyautogui
@@ -6,19 +7,22 @@ import subprocess
 import asyncio
 from pathlib import Path
 from typing import Optional, Dict, List
+
+from src.modules.application_data import applications_data
 from .module import Module
 
 class SystemModule(Module):
     def __init__(self, astra_manager):
         super().__init__(astra_manager)
-        self.module_name = "SystemModule"  # Добавляем имя модуля для контекстов
+        self.module_name = self.get_name()
         self.state_manager = self.astra_manager.get_state_manager()
         self.event_bus = self.astra_manager.get_event_bus()
+        self.logger = logging.getLogger(__name__)
         
         self.supported_commands = [
             "скриншот", "снимок экрана",
-            "открой", "запусти", "открыть",
-            "закрой", "заверши", "выход",
+            "открой", "запусти", "открыть", "включи", "включить",
+            "закрой", "заверши", "выход", "закрыть"
             "громкость", "звук",
             "выключи компьютер", "перезагрузка",
             "блокировка", "рабочий стол",
@@ -30,13 +34,13 @@ class SystemModule(Module):
         self.system_type = platform.system().lower()
         
         # Словарь приложений
-        self.applications = self._get_applications_map()
+        self.applications = applications_data
         
         # Отслеживаем открытые приложения
         self.opened_apps = {}
         
         # Подписка на события
-        self.event_bus.subscribe("context_cleared", self.handle_context_cleared)
+        self.event_bus.subscribe("context_cleared", self.on_context_cleared)
         self.event_bus.subscribe("shutdown", self.handle_shutdown)
         self.event_bus.subscribe("state_PROCESSING_enter", self.handle_processing_enter)
 
@@ -46,8 +50,7 @@ class SystemModule(Module):
             self.state_manager.extend_context_timeout(self.module_name)
 
     async def can_handle(self, command: str) -> bool:
-        normalized_command = command.lower()
-        if any(cmd in normalized_command for cmd in self.supported_commands):
+        if any(cmd in command for cmd in self.supported_commands):
             # Активируем контекст системного модуля с высоким приоритетом
             self.state_manager.set_active_context(
                 self.module_name, 
@@ -59,13 +62,12 @@ class SystemModule(Module):
         return False
 
     async def execute(self, command: str) -> str:
-        normalized_command = command.lower()
         
         # Сохраняем команду в контексте
         self.state_manager.set_module_data(self.module_name, "last_command", command)
         
         try:
-            if any(cmd in normalized_command for cmd in ["скриншот", "снимок экрана"]):
+            if any(cmd in command for cmd in ["скриншот", "снимок экрана"]):
                 screenshot_name = self._extract_screenshot_name(command)
                 result = await self.take_screenshot(screenshot_name)
                 
@@ -79,31 +81,31 @@ class SystemModule(Module):
                 
                 return result["message"]
             
-            elif any(cmd in normalized_command for cmd in ["открой", "запусти", "открыть"]):
+            elif any(cmd in command for cmd in ["открой", "запусти", "открыть", "включи", "включить"]):
                 return await self.open_application(command)
             
-            elif any(cmd in normalized_command for cmd in ["закрой", "заверши", "выход"]):
+            elif any(cmd in command for cmd in ["закрой", "заверши", "выход", "закрыть", ]):
                 return await self.close_application(command)
             
-            elif any(cmd in normalized_command for cmd in ["громкость", "звук"]):
+            elif any(cmd in command for cmd in ["громкость", "звук"]):
                 return await self.control_volume(command)
             
-            elif "выключи компьютер" in normalized_command:
+            elif "выключи компьютер" in command:
                 return await self.shutdown_computer()
             
-            elif "перезагрузка" in normalized_command:
+            elif "перезагрузка" in command:
                 return await self.reboot_computer()
             
-            elif "блокировка" in normalized_command:
+            elif "блокировка" in command:
                 return await self.lock_screen()
             
-            elif "рабочий стол" in normalized_command:
+            elif "рабочий стол" in command:
                 return await self.show_desktop()
             
-            elif any(cmd in normalized_command for cmd in ["список приложений", "активные приложения"]):
+            elif any(cmd in command for cmd in ["список приложений", "активные приложения"]):
                 return await self.list_applications()
             
-            elif any(cmd in normalized_command for cmd in ["информация о системе", "состояние системы"]):
+            elif any(cmd in command for cmd in ["информация о системе", "состояние системы"]):
                 return await self.get_system_info()
             
             return "Не удалось обработать команду системы"
@@ -170,7 +172,10 @@ class SystemModule(Module):
         
         try:
             if self.system_type == "windows":
-                process = subprocess.Popen(app_command, shell=True)
+                # process = subprocess.Popen(app_command, shell=True)
+                process = subprocess.Popen("start " + app_command, shell=True)
+                # process = subprocess.Popen("start " + app_command + "://", shell=True)
+                    
             else:
                 process = subprocess.Popen([app_command])
             
@@ -200,40 +205,142 @@ class SystemModule(Module):
 
     async def close_application(self, command: str) -> str:
         app_name = self._extract_application_name(command)
-        
+    
         if not app_name:
             return "Не указано название приложения для закрытия"
-        
+    
+        # Сначала пробуем закрыть приложения, запущенные через наш модуль
         if app_name in self.opened_apps:
             try:
                 process = self.opened_apps[app_name]
-                process.terminate()
+                if process and process.poll() is None:  # Процесс еще работает
+                    process.terminate()
+                    try:
+                        # Ждем завершения процесса
+                        await asyncio.wait_for(asyncio.create_task(process.wait()), timeout=5)
+                    except asyncio.TimeoutError:
+                        # Если не завершился, принудительно закрываем
+                        process.kill()
+            
                 del self.opened_apps[app_name]
-                
+            
                 # Удаляем из контекста
                 self.state_manager.clear_module_data(self.module_name, f"opened_{app_name}")
-                
-                await self.event_bus.publish_async("application_closed", {
-                    "app_name": app_name,
-                    "process_id": process.pid
-                })
-                
+            
+                await self.event_bus.publish_async("application_closed", {"app_name": app_name})
+            
                 return f"Приложение '{app_name}' успешно закрыто"
             except Exception as e:
                 return f"Ошибка при закрытии '{app_name}': {str(e)}"
-        
+    
+        # Если приложение не было запущено через нас, ищем в applications_data
+        app_info = self.applications.get(app_name)
+        if not app_info:
+            return f"Приложение '{app_name}' не найдено в списке приложений"
+    
+        # Получаем список процессов для закрытия
+        processes_to_kill = app_info.get("processes", [])
+        if not processes_to_kill:
+            return f"Для приложения '{app_name}' не указаны процессы для закрытия"
+    
+        success = False
         try:
             if self.system_type == "windows":
-                subprocess.run(f"taskkill /f /im {app_name}.exe", shell=True)
+                # Для Windows используем taskkill
+                for process_name in processes_to_kill:
+                    try:
+                        result = subprocess.run(
+                        f"taskkill /f /im {process_name}", 
+                        shell=True, 
+                        capture_output=True, 
+                        text=True,
+                        timeout=10
+                        )
+                        if result.returncode == 0 or "завершен" in result.stdout.lower():
+                            success = True
+                            self.logger.info(f"Успешно закрыт процесс: {process_name}")
+                    except subprocess.TimeoutExpired:
+                        continue
+                    except Exception as e:
+                        self.logger.error(f"Ошибка при закрытии {process_name}: {e}")
+        
             elif self.system_type == "linux":
-                subprocess.run(["pkill", app_name])
-            elif self.system_type == "darwin":
-                subprocess.run(["pkill", app_name])
-            
+                #  Для Linux используем pkill
+                for process_name in processes_to_kill:
+                    try:
+                        # Убираем расширение .exe для Linux
+                        linux_process_name = process_name.replace('.exe', '')
+                        result = subprocess.run(
+                        ["pkill", "-f", linux_process_name],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                        )
+                        if result.returncode == 0:
+                            success = True
+                            self.logger.info(f"Успешно закрыт процесс: {linux_process_name}")
+                    except subprocess.TimeoutExpired:
+                        continue
+                    except Exception as e:
+                        self.logger.error(f"Ошибка при закрытии {linux_process_name}: {e}")
+                    
+        # elif self.system_type == "darwin":
+        #     # Для Mac используем pkill или osascript для GUI приложений
+        #     for process_name in processes_to_kill:
+        #         try:
+        #             # Убираем расширение .exe для Mac
+        #             mac_process_name = process_name.replace('.exe', '')
+                    
+        #             # Пробуем закрыть через pkill
+        #             result = subprocess.run(
+        #                 ["pkill", "-f", mac_process_name],
+        #                 capture_output=True,
+        #                 text=True,
+        #                 timeout=10
+        #             )
+        #             if result.returncode == 0:
+        #                 success = True
+        #                 self.logger.info(f"Успешно закрыт процесс: {mac_process_name}")
+        #             else:
+        #                 # Пробуем закрыть через AppleScript для GUI приложений
+        #                 try:
+        #                     # Используем оригинальное имя приложения для AppleScript
+        #                     script = f'tell application "{app_name}" to quit'
+        #                     subprocess.run(["osascript", "-e", script], 
+        #                                  capture_output=True, timeout=10)
+        #                     success = True
+        #                     self.logger.info(f"Успешно закрыт через AppleScript: {app_name}")
+        #                 except:
+        #                     continue
+        #         except subprocess.TimeoutExpired:
+        #             continue
+        #         except Exception as e:
+        #             self.logger.error(f"Ошибка при закрытии {mac_process_name}: {e}")
+        
             await self.event_bus.publish_async("application_closed", {"app_name": app_name})
-            return f"Попытка закрыть приложение '{app_name}'"
+        
+            if success:
+                return f"Приложение '{app_name}' успешно закрыто"
+            else:
+                return f"Не удалось найти запущенное приложение '{app_name}'"
+            
         except Exception as e:
             return f"Не удалось закрыть приложение '{app_name}': {str(e)}"
+        
+
+    def _get_process_names_for_app(self, app_name: str) -> List[str]:
+        """Получить возможные имена процессов для приложения"""
+        app_data = self.applications_data.get(app_name.lower())
+        if app_data and "processes" in app_data:
+            return app_data["processes"]
+        return [f"{app_name}.exe", app_name]
+    
+
+    def _get_applications_map(self) -> Dict[str, Dict[str, str]]:
+        """Возвращает словарь приложений для разных операционных систем."""
+        return {name: {k: v for k, v in data.items() if k != "processes"} 
+            for name, data in self.applications_data.items()}
+
 
     async def get_system_info(self) -> str:
         """Получить информацию о системе"""
@@ -369,15 +476,13 @@ class SystemModule(Module):
         return f"Доступные приложения: {available_apps}"
 
     def _extract_application_name(self, command: str) -> str:
-        """Извлечение названия приложения из команды"""
-        command_lower = command.lower()
-        
+        """Извлечение названия приложения из команды"""   
         # Удаляем команды открытия/закрытия
-        open_patterns = ["открой", "запусти", "открыть"]
-        close_patterns = ["закрой", "заверши", "выход"]
+        open_patterns = ["открой", "запусти", "открыть", "включи", "открыть"]
+        close_patterns = ["закрой", "заверши", "выход", "закрыть"]
         
         for pattern in open_patterns + close_patterns:
-            if pattern in command_lower:
+            if pattern in command:
                 # Извлекаем часть после команды
                 name_part = command.split(pattern, 1)[-1].strip()
                 if name_part:
@@ -385,119 +490,6 @@ class SystemModule(Module):
         
         return ""
     
-
-    def _get_applications_map(self) -> Dict[str, Dict[str, str]]:
-       """Возвращает словарь приложений для разных операционных систем."""
-       applications = {
-            "блокнот": {
-            "windows": "notepad",
-            "linux": "gedit",  # или "kate", "leafpad" в зависимости от DE
-            "darwin": "TextEdit"
-            },
-        "калькулятор": {
-            "windows": "calc",
-            "linux": "gnome-calculator",  # или "kcalc", "qalculate-gtk"
-            "darwin": "Calculator"
-            },
-        "проводник": {
-            "windows": "explorer",
-            "linux": "nautilus",  # или "dolphin", "thunar"
-            "darwin": "Finder"
-            },
-        "браузер": {
-            "windows": "start chrome",  # или "start firefox", "start msedge"
-            "linux": "google-chrome",   # или "firefox", "chromium-browser"
-            "darwin": "open -a 'Google Chrome'"
-            },
-        "chrome": {
-            "windows": "chrome",
-            "linux": "google-chrome",
-            "darwin": "open -a 'Google Chrome'"
-            },
-        "firefox": {
-            "windows": "firefox",
-            "linux": "firefox",
-            "darwin": "open -a Firefox"
-            },
-        "word": {
-            "windows": "winword",
-            "linux": "libreoffice",  # альтернатива
-            "darwin": "open -a 'Microsoft Word'"
-            },
-        "excel": {
-            "windows": "excel",
-            "linux": "libreoffice",  # альтернатива
-            "darwin": "open -a 'Microsoft Excel'"
-            },
-        "панель управления": {
-            "windows": "control",
-            "linux": "gnome-control-center",
-            "darwin": "system-preferences"
-            },
-        "диспетчер задач": {
-            "windows": "taskmgr",
-            "linux": "gnome-system-monitor",
-            "darwin": "Activity Monitor"
-            },
-        "терминал": {
-            "windows": "cmd",
-            "linux": "gnome-terminal",  # или "konsole", "xterm"
-            "darwin": "Terminal"
-            },
-        "камера": {
-            "windows": "start microsoft.windows.camera:",
-            "linux": "cheese",  # или "guvcview"
-            "darwin": "Photo Booth"
-            },
-        "пaint": {
-            "windows": "mspaint",
-            "linux": "kolourpaint",  # или "gimp", "pinta"
-            "darwin": "Preview"  # может открывать и редактировать изображения
-            },
-        "музыка": {
-            "windows": "start mswindowsmusic:",
-            "linux": "rhythmbox",  # или "amarok", "clementine"
-            "darwin": "open -a Music"
-            },
-        "видео": {
-            "windows": "start mswindowsvideo:",
-            "linux": "vlc",  # или "smplayer"
-            "darwin": "open -a 'QuickTime Player'"
-            },
-        "календарь": {
-            "windows": "outlookcal:",
-            "linux": "gnome-calendar",
-            "darwin": "open -a Calendar"
-            },
-        "почта": {
-            "windows": "outlookmail:",
-            "linux": "thunderbird",
-            "darwin": "open -a Mail"
-            }
-        }
-    
-        # Дополнительные приложения для конкретных ОС
-       if self.system_type == "windows":
-             applications.update({
-            "панель управления": "control",
-            "диспетчер устройств": "devmgmt.msc",
-            "настройки": "start ms-settings:",
-            "блокнот++": "notepad++",  # если установлен
-             })
-       elif self.system_type == "linux":
-            applications.update({
-            "файлы": "nautilus",
-            "настройки": "gnome-control-center",
-            "текстовый редактор": "gedit",
-            })
-       elif self.system_type == "darwin":
-            applications.update({
-            "настройки": "system-preferences",
-            "фото": "open -a Photos",
-            "сообщения": "open -a Messages",
-            })
-    
-       return applications
 
     def _extract_screenshot_name(self, command: str) -> Optional[str]:
         """Извлечение названия скриншота из команды"""
@@ -537,7 +529,7 @@ class SystemModule(Module):
         screenshots_dir.mkdir(exist_ok=True)
         return screenshots_dir
 
-    async def handle_context_cleared(self, module_name: str = None):
+    async def on_context_cleared(self, module_name: str = None):
         """Обработчик очистки контекста - адаптирован под вашу систему"""
         # Очищаем только если это наш модуль или очищаются все контексты
         if module_name is None or module_name == self.module_name:
@@ -549,12 +541,12 @@ class SystemModule(Module):
                         "reason": "context_cleared"
                     })
                 except Exception as e:
-                    print(f"Ошибка при закрытии {app_name}: {e}")
+                    self.logger.critical(f"Ошибка при закрытии {app_name}: {e}")
             self.opened_apps.clear()
 
     async def handle_shutdown(self, data=None):
         """Обработчик выключения системы"""
-        await self.handle_context_cleared()
+        await self.on_context_cleared()
 
     def get_module_context(self) -> Dict:
         """Получить контекст модуля для отладки"""
@@ -577,5 +569,4 @@ class SystemModule(Module):
     def set_context(self, context: Dict):
         """Установить контекст модуля"""
         if "opened_apps" in context:
-            # Восстанавливаем только имена, процессы нельзя сериализовать
             self.opened_apps = {app: None for app in context["opened_apps"]}
