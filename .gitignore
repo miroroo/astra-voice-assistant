@@ -86,4 +86,4 @@ htmlcov/
 .coverage.*
 
 
-launch.bat
+src/config/api_config.py

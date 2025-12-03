@@ -3,3 +3,8 @@ ruff==0.13.1
 typing==3.7.4.3
 sounddevice==0.5.2
 vosk==0.3.44
+bs4==0.0.2
+openai==2.7.2
+aiohttp==3.13.2
+PyQt6==6.10.0
+async==0.28.0
