@@ -5,7 +5,7 @@ from src.modules.module_manager import ModuleManager
 from src.modules.registry import register_all_modules
 from src.voice_engine.listener import VoiceModule
 from src.voice_engine.tts_engine import TTSModule
-from src.ui.overlay_widget import TextWindow
+from src.ui.overley_widget import TextWindow
 import logging
 import asyncio
 import sys

@@ -101,6 +101,7 @@ class Core:
         try:
             if self.command:
                 result = await self.module_manager.execute_command(self.command)
+                self.logger.info(f"[Core]: {result}")
                 self.astra_manager.update_widget_text(result)
                 self.astra_manager.speak(result) 
                 
