@@ -1,6 +1,11 @@
 import logging
 
-from src.modules.calendar import CalendarModule
+from .deepseek import DeepSeekModule
+from .calendar import CalendarModule
+from .dialog import DialogModule
+from .jokes import JokeModule
+from .news import NewsModule
+from .play import RandomModule
 from .system import SystemModule
 from .weather import WeatherModule
 from .introducing import IntroducingModule
@@ -20,7 +25,14 @@ def get_all_modules() -> List[Type[Module]]:
         WeatherModule,
         SystemModule,
         CalendarModule,
-        
+        DialogModule,
+        RandomModule,
+        NewsModule,
+        JokeModule,
+
+
+
+        DeepSeekModule,
     ]
 
 def register_all_modules(astra_manager):
