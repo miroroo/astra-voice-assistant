@@ -5,7 +5,11 @@ import json
 import time
 import logging
 from vosk import Model, KaldiRecognizer
-from src.core.event_bus import EventBus
+
+# Заглушка для EventBus, чтобы можно было протестировать модуль
+class EventBus:
+    def emit(self, event_name, data=None):
+        print(f"[EventBus] {event_name}: {data}")
 
 
 class VoiceModule:
@@ -45,29 +49,20 @@ class VoiceModule:
         self.listening = False
 
     def set_pause_threshold(self, seconds):
-        """Установить порог паузы для текущего режима"""
         self.current_pause_threshold = seconds
 
     def set_listening_mode(self, is_listening=False):
-        """Переключить режим прослушивания"""
         if is_listening:
             self.current_pause_threshold = self.listening_pause_threshold
         else:
             self.current_pause_threshold = self.pause_threshold
 
-
     def _callback(self, indata, frames, time_info, status):
-        """Обработка поступающих данных с микрофона."""
         if status:
             self.logger.warning(f"Аудио статус: {status}")
         self.q.put(bytes(indata))
 
     def listen(self):
-        """
-        Слушает микрофон.
-        После ключевого слова начинает запись текста
-        и автоматически завершает запись после паузы.
-        """
         recording = True
         recorded_text = ""
         last_voice_time = time.time()
@@ -86,7 +81,6 @@ class VoiceModule:
                     try:
                         data = self.q.get(timeout=0.1)
                     except queue.Empty:
-                        # Проверяем, не истекла ли пауза
                         if recording and (time.time() - last_voice_time > self.current_pause_threshold):
                             self.logger.info("Пауза превысила порог, завершение прослушивания")
                             break
@@ -104,7 +98,7 @@ class VoiceModule:
                             continue
 
                         self.logger.info(f"Распознано: {text}")
-                        last_voice_time = time.time()  # обновляем момент последней речи
+                        last_voice_time = time.time()
 
                         text = text.strip()
 
@@ -121,5 +115,11 @@ class VoiceModule:
             self.logger.info("Прослушивание завершено")
 
     def run(self):
-        """Запускает модуль и возвращает текст после ключевого слова."""
         return self.listen()
+
+
+# ------------------- Тестовый запуск -------------------
+if __name__ == "__main__":
+    bus = EventBus()
+    vm = VoiceModule(bus)
+    print("Текст после ключевого слова:", vm.run())
