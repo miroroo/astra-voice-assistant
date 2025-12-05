@@ -1,1 +1,2 @@
-src/voice_engine/models/* filter=lfs diff=lfs merge=lfs -text
+
+src/voice_engine/models/** filter=lfs diff=lfs merge=lfs -text
