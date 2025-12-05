@@ -41,8 +41,7 @@ class ModuleManager:
             try:
                 if await module.can_handle(command):
                     result = await module.execute(command)
-                    if not self._is_fallback_response(result):
-                        return result
+                    return result
             except Exception as e:
                 self.logger.critical(f"[ModuleManager] Ошибка в модуле {module.get_name()}: {e}")
                 continue

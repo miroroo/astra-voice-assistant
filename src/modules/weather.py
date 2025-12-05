@@ -13,7 +13,7 @@ class WeatherModule(Module):
         self.state_manager = self.astra_manager.get_state_manager()
         self.base_url = "http://api.openweathermap.org/data/2.5/weather"
         self.weather_commands = [
-            'погода', 'weather', 'температура', 'прогноз', 
+            'погода', 'температура', 'прогноз', 
             'какая погода', 'сколько градусов', 'холодно', 'жарко'
         ]
         self.module_name = self.get_name()
@@ -21,8 +21,7 @@ class WeatherModule(Module):
         self.event_bus.subscribe("context_cleared", self.on_context_cleared)
     
     async def on_context_cleared(self, module_name: str):
-        if self.module_name == self.get_name():
-            pass
+        pass
     
     async def can_handle(self, command: str) -> bool:
         if any(cmd in command for cmd in self.weather_commands):
@@ -114,14 +113,11 @@ class WeatherModule(Module):
             return {
                 "success": True,
                 "city": data['name'],
-                "country": data['sys']['country'],
                 "temperature": round(data['main']['temp']),
                 "feels_like": round(data['main']['feels_like']),
                 "description": data['weather'][0]['description'],
                 "humidity": data['main']['humidity'],
-                "pressure": data['main']['pressure'],
                 "wind_speed": data['wind']['speed'],
-                "visibility": data.get('visibility', 'N/A')
             }
 
         except requests.exceptions.RequestException as e:
@@ -145,11 +141,9 @@ class WeatherModule(Module):
     def _format_weather_response(self, weather_data: Dict[str, Any]) -> str:
         """Форматирует данные о погоде в читаемый текст."""
         if not weather_data.get('success'):
-            error_msg = weather_data.get('error', 'Неизвестная ошибка')
             return f"Не удалось получить погоду для {weather_data.get('city', 'города')}."
 
         city = weather_data['city']
-        country = weather_data['country']
         temp = weather_data['temperature']
         feels_like = weather_data['feels_like']
         description = weather_data['description'].capitalize()

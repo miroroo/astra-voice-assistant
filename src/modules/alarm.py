@@ -12,9 +12,8 @@ class AlarmModule(Module):
         self.event_bus = astra_manager.get_event_bus()
         self.logger = logging.getLogger(__name__)
         self.time_parser = TimeParser()  
+        self.module_name = self.get_name()
         
-    def get_name(self) -> str:
-        return "AlarmModule"
     
     async def on_context_cleared(self, event_data=None):
         pass
@@ -23,7 +22,7 @@ class AlarmModule(Module):
         command_lower = command.lower()
         
         # Если есть активный контекст - принимаем любую команду
-        if self.state_manager.get_module_priority(self.get_name()) > 0:
+        if self.state_manager.get_module_priority(self.module_name()) > 0:
             if self.time_parser.parse_datetime(command)["success"]: 
                 return True
         
@@ -33,12 +32,12 @@ class AlarmModule(Module):
     
     async def execute(self, command: str) -> str:
         command_lower = command.lower()
-        has_context = self.state_manager.get_module_priority(self.get_name()) > 0
+        has_context = self.state_manager.get_module_priority(self.module_name()) > 0
         
         # Обработка команд отмены и показа списка
         if any(cmd in command_lower for cmd in ["отмени", "удали", "стоп", "отмена"]):
             result = await self._cancel_alarms()
-            self.state_manager.clear_active_context(self.get_name())
+            self.state_manager.clear_active_context(self.module_name())
             return result
         elif any(cmd in command_lower for cmd in ["список", "сколько", "какие", "какой", "покажи"]):
             return await self._show_alarms()
@@ -51,7 +50,7 @@ class AlarmModule(Module):
                 return "Не удалось распознать время. Пожалуйста, назовите время по-другому."
             else:
                 self.state_manager.set_active_context(
-                    self.get_name(), 
+                    self.module_name(), 
                     priority=10,
                     context_type="alarm",
                     timeout_seconds=60
@@ -61,10 +60,10 @@ class AlarmModule(Module):
         # Устанавливаем будильник
         try:
             await self._schedule_alarm(time_result["datetime"])
-            self.state_manager.clear_active_context(self.get_name())
+            self.state_manager.clear_active_context(self.module_name())
             return f"✅ Будильник установлен на {time_result['datetime'].strftime('%d.%m.%Y в %H:%M')}"
         except Exception as e:
-            return f"❌ Ошибка при установке будильника: {str(e)}"
+            return f"[Alarm] Ошибка при установке будильника: {str(e)}"
 
     # Остальные методы без изменений
     async def _schedule_alarm(self, alarm_time: datetime) -> None:
@@ -87,7 +86,7 @@ class AlarmModule(Module):
                 "message": f"⏰ Будильник на {alarm_time.strftime('%H:%M')}!"
             })
         except asyncio.CancelledError:
-            self.logger.info(f"Будильник {alarm_time} отменен")
+            self.logger.info(f"[Alarm] Будильник {alarm_time} отменен")
         finally:
             self.active_alarms = [alarm for alarm in self.active_alarms if alarm['id'] != alarm_id]
 

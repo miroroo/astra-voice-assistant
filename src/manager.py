@@ -154,11 +154,10 @@ class OverlayManager:
             self.window.show()
             self._running = True
             
-            print("✓ Overlay window created and shown")
             return True
             
         except Exception as e:
-            print(f"✗ Ошибка запуска overlay: {e}")
+            print(f" Ошибка запуска overlay: {e}")
             return False
     
     def update_text(self, text: str):

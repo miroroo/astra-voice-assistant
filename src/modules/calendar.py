@@ -1,7 +1,7 @@
 from .module import Module
 from datetime import datetime, timedelta
 import re
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 import asyncio
 from src.modules.parse_time import TimeParser
 
@@ -86,7 +86,7 @@ class CalendarModule(Module):
             return response
             
         except Exception as e:
-            return f"❌ Ошибка при добавлении задачи: {str(e)}"
+            return f"Ошибка при добавлении задачи: {str(e)}"
 
     def _extract_task_title(self, command: str, time_expression: str = "") -> str:
         """Извлекает название задачи, убирая временные выражения"""
@@ -145,7 +145,7 @@ class CalendarModule(Module):
             return response.strip()
             
         except Exception as e:
-            return f"❌ Ошибка при получении задач: {str(e)}"
+            return f"Ошибка при получении задач: {str(e)}"
 
     async def _remove_task(self, command: str) -> str:
         """Удаление или завершение задачи"""
@@ -157,13 +157,7 @@ class CalendarModule(Module):
                 # Показываем список задач для выбора
                 pending_tasks = [t for t in self.tasks.values() if not t["completed"]]
                 if not pending_tasks:
-                    return "📭 Нет активных задач для удаления."
-                
-                self.state_manager.set_module_data(
-                    self.module_name,
-                    "pending_tasks_list",
-                    [t["id"] for t in pending_tasks]
-                )
+                    return "Нет активных задач для удаления."
                 
                 response = "Какую задачу удалить? Скажите номер:\n"
                 for task in pending_tasks[:5]:  # Показываем первые 5
@@ -179,7 +173,7 @@ class CalendarModule(Module):
                 return response
             
             if task_id not in self.tasks:
-                return f"❌ Задача с номером {task_id} не найдена."
+                return f"Задача с номером {task_id} не найдена."
             
             task_title = self.tasks[task_id]["title"]
             del self.tasks[task_id]
@@ -187,7 +181,7 @@ class CalendarModule(Module):
             return f"✅ Задача '{task_title}' удалена."
             
         except Exception as e:
-            return f"❌ Ошибка при удалении задачи: {str(e)}"
+            return f"Ошибка при удалении задачи: {str(e)}"
         
 
     async def _schedule_reminder(self, task_id: int):

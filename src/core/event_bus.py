@@ -52,17 +52,3 @@ class EventBus:
     def publish(self, event_type: str, *args, **kwargs):
         """Синхронная публикация события (для случаев когда нельзя использовать await)"""
         asyncio.create_task(self.publish_async(event_type, *args, **kwargs))
-
-    def get_subscribers_count(self, event_type: str = None) -> int:
-        """Получить количество подписчиков"""
-        if event_type:
-            return len(self._subscribers.get(event_type, []))
-        return sum(len(subscribers) for subscribers in self._subscribers.values())
-
-    def get_event_history(self, limit: int = 10) -> List[Dict]:
-        """Получить историю событий"""
-        return self._event_history[-limit:] if self._event_history else []
-
-    def clear_history(self):
-        """Очистить историю событий"""
-        self._event_history.clear()

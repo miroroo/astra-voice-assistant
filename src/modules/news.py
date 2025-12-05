@@ -1,6 +1,7 @@
 import logging
 import aiohttp
 from typing import Dict, Any
+from src.config.api_config import GNEWS_API_KEY
 from src.modules.module import Module
 
 class NewsModule(Module):
@@ -8,7 +9,8 @@ class NewsModule(Module):
         super().__init__(astra_manager)
         self.state_manager = astra_manager.get_state_manager()
         self.logger = logging.getLogger(__name__)
-        self.api_key = "1dde02817f5d763a914b326223f667af"  # Получите полный ключ на gnews.io
+        self.module_name = self.get_name()
+        self.api_key = GNEWS_API_KEY
         self.base_url = "https://gnews.io/api/v4"
         self.default_language = "ru"  # Исправлено: было default_country
         self.categories = {
@@ -20,9 +22,6 @@ class NewsModule(Module):
             "науке": "science",
             "общие": "general"
         }
-        
-    def get_name(self) -> str:
-        return "NewsModule"
     
     async def on_context_cleared(self, event_data=None):
         pass
@@ -31,7 +30,7 @@ class NewsModule(Module):
         command_lower = command.lower()
         
         # Если есть активный контекст - принимаем любую команду
-        if self.state_manager.get_module_priority(self.get_name()) > 0:
+        if self.state_manager.get_module_priority(self.module_name()) > 0:
             return True
         
         # Без контекста проверяем ключевые слова новостей
@@ -42,11 +41,11 @@ class NewsModule(Module):
     
     async def execute(self, command: str) -> str:
         command_lower = command.lower()
-        has_context = self.state_manager.get_module_priority(self.get_name()) > 0
+        has_context = self.state_manager.get_module_priority(self.module_name()) > 0
         
         # Обработка команд выхода
         if any(cmd in command_lower for cmd in ["выход", "стоп", "закончить", "отмена"]):
-            self.state_manager.clear_active_context(self.get_name())
+            self.state_manager.clear_active_context(self.module_name())
             return "Выход из режима новостей"
         
         # Определяем запрос пользователя
@@ -60,7 +59,7 @@ class NewsModule(Module):
         else:
             # Новый запрос новостей
             self.state_manager.set_active_context(
-                self.get_name(), 
+                self.module_name(), 
                 priority=10,
                 context_type="news",
                 timeout_seconds=60
@@ -118,11 +117,11 @@ class NewsModule(Module):
                         return self._format_news_response(data, category)
                     else:
                         error_text = await response.text()
-                        self.logger.error(f"GNews API error: {response.status}, {error_text}")
+                        self.logger.error(f"[News] Ошибка API : {response.status}, {error_text}")
                         return f"Ошибка при получении новостей: {response.status}"
                         
         except Exception as e:
-            self.logger.error(f"Error fetching news: {e}")
+            self.logger.error(f"[News] Ошибка получения новостей: {e}")
             return "Не удалось получить новости. Проверьте подключение к интернету."
     
     async def _search_news(self, query: str, page: int = 1) -> str:
@@ -145,7 +144,7 @@ class NewsModule(Module):
                         return f"Ошибка при поиске новостей: {response.status}"
                         
         except Exception as e:
-            self.logger.error(f"Error searching news: {e}")
+            self.logger.error(f"[News] Ошибка поиска новостей: {e}")
             return "Не удалось выполнить поиск новостей."
     
     async def _get_more_news(self) -> str:

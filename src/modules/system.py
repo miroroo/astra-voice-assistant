@@ -258,11 +258,11 @@ class SystemModule(Module):
                         )
                         if result.returncode == 0 or "завершен" in result.stdout.lower():
                             success = True
-                            self.logger.info(f"Успешно закрыт процесс: {process_name}")
+                            self.logger.info(f"[System] Успешно закрыт процесс: {process_name}")
                     except subprocess.TimeoutExpired:
                         continue
                     except Exception as e:
-                        self.logger.error(f"Ошибка при закрытии {process_name}: {e}")
+                        self.logger.error(f"[System] Ошибка при закрытии {process_name}: {e}")
         
             elif self.system_type == "linux":
                 #  Для Linux используем pkill
@@ -278,44 +278,12 @@ class SystemModule(Module):
                         )
                         if result.returncode == 0:
                             success = True
-                            self.logger.info(f"Успешно закрыт процесс: {linux_process_name}")
+                            self.logger.info(f"[System] Успешно закрыт процесс: {linux_process_name}")
                     except subprocess.TimeoutExpired:
                         continue
                     except Exception as e:
-                        self.logger.error(f"Ошибка при закрытии {linux_process_name}: {e}")
+                        self.logger.error(f"[System] Ошибка при закрытии {linux_process_name}: {e}")
                     
-        # elif self.system_type == "darwin":
-        #     # Для Mac используем pkill или osascript для GUI приложений
-        #     for process_name in processes_to_kill:
-        #         try:
-        #             # Убираем расширение .exe для Mac
-        #             mac_process_name = process_name.replace('.exe', '')
-                    
-        #             # Пробуем закрыть через pkill
-        #             result = subprocess.run(
-        #                 ["pkill", "-f", mac_process_name],
-        #                 capture_output=True,
-        #                 text=True,
-        #                 timeout=10
-        #             )
-        #             if result.returncode == 0:
-        #                 success = True
-        #                 self.logger.info(f"Успешно закрыт процесс: {mac_process_name}")
-        #             else:
-        #                 # Пробуем закрыть через AppleScript для GUI приложений
-        #                 try:
-        #                     # Используем оригинальное имя приложения для AppleScript
-        #                     script = f'tell application "{app_name}" to quit'
-        #                     subprocess.run(["osascript", "-e", script], 
-        #                                  capture_output=True, timeout=10)
-        #                     success = True
-        #                     self.logger.info(f"Успешно закрыт через AppleScript: {app_name}")
-        #                 except:
-        #                     continue
-        #         except subprocess.TimeoutExpired:
-        #             continue
-        #         except Exception as e:
-        #             self.logger.error(f"Ошибка при закрытии {mac_process_name}: {e}")
         
             await self.event_bus.publish_async("application_closed", {"app_name": app_name})
         
@@ -541,7 +509,7 @@ class SystemModule(Module):
                         "reason": "context_cleared"
                     })
                 except Exception as e:
-                    self.logger.critical(f"Ошибка при закрытии {app_name}: {e}")
+                    self.logger.critical(f"[System] Ошибка при закрытии {app_name}: {e}")
             self.opened_apps.clear()
 
     async def handle_shutdown(self, data=None):

@@ -98,27 +98,10 @@ class StateManager:
         self._clean_expired_contexts()
         return self._active_contexts.copy()
 
-    def get_highest_priority_context(self) -> Optional[str]:
-        """Получить модуль с наивысшим приоритетом"""
-        self._clean_expired_contexts()
-        if not self._active_contexts:
-            return None
-        return max(self._active_contexts.items(), key=lambda x: x[1])[0]
-
     def get_module_priority(self, module_name: str) -> int:
         """Получает приоритет модуля."""
         self._clean_expired_contexts()
         return self._active_contexts.get(module_name, 0)
-
-    def set_module_data(self, module_name: str, key: str, value: Any) -> None:
-        """Устанавливает данные для модуля."""
-        if module_name not in self._module_data:
-            self._module_data[module_name] = {}
-        self._module_data[module_name][key] = value
-        
-        # Обновляем timestamp при изменении данных
-        if module_name in self._context_timestamps:
-            self._context_timestamps[module_name] = time.time()
 
     def get_module_data(self, module_name: str, key: str = None) -> Any:
         """Получает данные модуля."""

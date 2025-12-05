@@ -33,15 +33,15 @@ class VoiceModule:
             model_path = os.path.join(base_dir, "models", "vosk-model-small-ru-0.22")
 
         if not os.path.exists(model_path):
-            self.logger.critical(f"Модель не найдена по пути: {model_path}")
+            self.logger.critical(f"[Listener] Модель не найдена по пути: {model_path}")
             raise FileNotFoundError(f"Модель не найдена по пути: {model_path}")
 
-        self.logger.info(f"Загрузка модели речи из: {model_path}")
+        self.logger.info(f"[Listener] Загрузка модели речи из: {model_path}")
         self.model = Model(model_path)
         self.samplerate = 16000
         self.recognizer = KaldiRecognizer(self.model, self.samplerate)
         self.q = queue.Queue()
-        self.logger.info("Модель успешно загружена.")
+        self.logger.info("[Listener] Модель успешно загружена.")
         self.listening = False
 
     def set_pause_threshold(self, seconds):
@@ -59,7 +59,7 @@ class VoiceModule:
     def _callback(self, indata, frames, time_info, status):
         """Обработка поступающих данных с микрофона."""
         if status:
-            self.logger.warning(f"Аудио статус: {status}")
+            self.logger.warning(f"[Listener] Аудио статус: {status}")
         self.q.put(bytes(indata))
 
     def listen(self):
@@ -80,7 +80,7 @@ class VoiceModule:
                 channels=1,
                 callback=self._callback
             ):
-                self.logger.info(f"Начало прослушивания (пауза: {self.current_pause_threshold}с)")
+                self.logger.info(f"[Listener] Начало прослушивания (пауза: {self.current_pause_threshold}с)")
 
                 while True:
                     try:
@@ -88,7 +88,7 @@ class VoiceModule:
                     except queue.Empty:
                         # Проверяем, не истекла ли пауза
                         if recording and (time.time() - last_voice_time > self.current_pause_threshold):
-                            self.logger.info("Пауза превысила порог, завершение прослушивания")
+                            self.logger.info("[Listener] Пауза превысила порог, завершение прослушивания")
                             break
                         continue
 
@@ -97,7 +97,7 @@ class VoiceModule:
                             result = json.loads(self.recognizer.Result())
                             text = result.get("text", "").lower()
                         except json.JSONDecodeError:
-                            self.logger.error("Ошибка декодирования результата распознавания.")
+                            self.logger.error("[Listener] Ошибка декодирования результата распознавания.")
                             continue
 
                         if not text:
@@ -114,11 +114,11 @@ class VoiceModule:
                 return recorded_text.strip()
 
         except KeyboardInterrupt:
-            self.logger.info("Прослушивание остановлено пользователем.")
+            self.logger.info("[Listener] Прослушивание остановлено пользователем.")
         except Exception as e:
-            self.logger.exception(f"Ошибка при работе с микрофона: {e}")
+            self.logger.exception(f"[Listener] Ошибка при работе с микрофона: {e}")
         finally:
-            self.logger.info("Прослушивание завершено")
+            self.logger.info("[Listener] Прослушивание завершено")
 
     def run(self):
         """Запускает модуль и возвращает текст после ключевого слова."""

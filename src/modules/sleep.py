@@ -16,8 +16,7 @@ class SleepModule(Module):
         self.event_bus.subscribe("context_cleared", self.on_context_cleared)
     
     async def on_context_cleared(self, module_name: str):
-        if module_name == self.get_name():
-            pass
+        pass
 
     async def can_handle(self, command: str) -> bool: 
         if any(cmd in command for cmd in self.sleep_commands):

@@ -12,12 +12,6 @@ applications_data = {
             "darwin": "open -a 'Google Chrome'",
             "processes": ["chrome.exe", "google-chrome"]
         },
-        "chrome": {
-            "windows": "chrome",
-            "linux": "google-chrome",
-            "darwin": "open -a 'Google Chrome'", 
-            "processes": ["chrome.exe", "google-chrome"]
-        },
         "гугл хром": {
             "windows": "chrome",
             "linux": "google-chrome",
@@ -30,21 +24,9 @@ applications_data = {
             "darwin": "open -a Firefox",
             "processes": ["firefox.exe", "firefox"]
         },
-        "firefox": {
-            "windows": "firefox", 
-            "linux": "firefox",
-            "darwin": "open -a Firefox",
-            "processes": ["firefox.exe", "firefox"]
-        },
         "эдж": {
             "windows": "start msedge",
             "linux": "microsoft-edge", 
-            "darwin": "open -a 'Microsoft Edge'",
-            "processes": ["msedge.exe", "MicrosoftEdge.exe"]
-        },
-        "edge": {
-            "windows": "start msedge",
-            "linux": "microsoft-edge",
             "darwin": "open -a 'Microsoft Edge'",
             "processes": ["msedge.exe", "MicrosoftEdge.exe"]
         },
@@ -62,12 +44,6 @@ applications_data = {
             "darwin": "open -a 'Visual Studio Code'",
             "processes": ["code.exe", "code"]
         },
-        "vscode": {
-            "windows": "code",
-            "linux": "code",
-            "darwin": "open -a 'Visual Studio Code'",
-            "processes": ["code.exe", "code"]
-        },
         "вижуал студио код": {
             "windows": "code",
             "linux": "code",
@@ -80,53 +56,18 @@ applications_data = {
             "darwin": "TextEdit",
             "processes": ["notepad.exe", "gedit", "TextEdit"]
         },
-        "notepad": {
-            "windows": "notepad",
-            "linux": "gedit",
-            "darwin": "TextEdit",
-            "processes": ["notepad.exe", "gedit", "TextEdit"]
-        },
-        "notepad++": {
-            "windows": "notepad++",
-            "linux": "notepadqq",
-            "darwin": "",
-            "processes": ["notepad++.exe", "notepadqq"]
-        },
-        "sublime": {
-            "windows": "sublime_text",
-            "linux": "sublime_text",
-            "darwin": "open -a 'Sublime Text'",
-            "processes": ["sublime_text.exe", "sublime_text"]
-        },
-        "атом": {
-            "windows": "atom",
-            "linux": "atom",
-            "darwin": "open -a Atom",
-            "processes": ["atom.exe", "atom"]
-        },
         "пайчарм": {
             "windows": "pycharm",
             "linux": "pycharm",
             "darwin": "open -a 'PyCharm CE'",
             "processes": ["pycharm.exe", "pycharm"]
         },
-        "intellij": {
-            "windows": "idea",
-            "linux": "idea",
-            "darwin": "open -a 'IntelliJ IDEA CE'",
-            "processes": ["idea.exe", "idea"]
-        },
+
         
         # Офисные приложения
         "ворд": {
             "windows": "winword",
             "linux": "libreoffice",
-            "darwin": "open -a 'Microsoft Word'",
-            "processes": ["winword.exe", "Microsoft Word"]
-        },
-        "word": {
-            "windows": "winword",
-            "linux": "libreoffice", 
             "darwin": "open -a 'Microsoft Word'",
             "processes": ["winword.exe", "Microsoft Word"]
         },
@@ -136,19 +77,7 @@ applications_data = {
             "darwin": "open -a 'Microsoft Excel'", 
             "processes": ["excel.exe", "Microsoft Excel"]
         },
-        "excel": {
-            "windows": "excel",
-            "linux": "libreoffice",
-            "darwin": "open -a 'Microsoft Excel'",
-            "processes": ["excel.exe", "Microsoft Excel"]
-        },
         "повер поинт": {
-            "windows": "powerpnt",
-            "linux": "libreoffice",
-            "darwin": "open -a 'Microsoft PowerPoint'",
-            "processes": ["powerpnt.exe", "Microsoft PowerPoint"]
-        },
-        "powerpoint": {
             "windows": "powerpnt",
             "linux": "libreoffice",
             "darwin": "open -a 'Microsoft PowerPoint'",
@@ -159,18 +88,6 @@ applications_data = {
             "linux": "libreoffice",
             "darwin": "open -a 'Microsoft Word'",
             "processes": ["winword.exe", "excel.exe", "powerpnt.exe"]
-        },
-        "libreoffice": {
-            "windows": "libreoffice",
-            "linux": "libreoffice",
-            "darwin": "open -a 'LibreOffice'",
-            "processes": ["libreoffice.exe", "libreoffice"]
-        },
-        "openoffice": {
-            "windows": "soffice",
-            "linux": "soffice",
-            "darwin": "open -a 'OpenOffice'",
-            "processes": ["soffice.exe", "soffice"]
         },
         
         # Системные утилиты
@@ -254,18 +171,6 @@ applications_data = {
             "darwin": "open -a 'QuickTime Player'",
             "processes": ["vlc.exe", "wmplayer.exe"]
         },
-        "vlc": {
-            "windows": "vlc",
-            "linux": "vlc",
-            "darwin": "open -a VLC",
-            "processes": ["vlc.exe", "vlc"]
-        },
-        "media player": {
-            "windows": "wmplayer",
-            "linux": "vlc",
-            "darwin": "open -a 'QuickTime Player'",
-            "processes": ["wmplayer.exe", "vlc"]
-        },
         "кино": {
             "windows": "start mswindowsvideo:",
             "linux": "vlc",
@@ -292,20 +197,8 @@ applications_data = {
             "darwin": "open -a 'Microsoft Outlook'",
             "processes": ["outlook.exe", "thunderbird"]
         },
-        "thunderbird": {
-            "windows": "thunderbird",
-            "linux": "thunderbird",
-            "darwin": "open -a Thunderbird",
-            "processes": ["thunderbird.exe", "thunderbird"]
-        },
         "телеграм": {
             "windows": "telegram",
-            "linux": "telegram-desktop",
-            "darwin": "open -a Telegram",
-            "processes": ["telegram.exe", "telegram-desktop"]
-        },
-        "telegram": {
-            "windows": "start telegram://",
             "linux": "telegram-desktop",
             "darwin": "open -a Telegram",
             "processes": ["telegram.exe", "telegram-desktop"]
@@ -374,13 +267,7 @@ applications_data = {
         },
         
         # Игры и развлечения
-        "стим": {
-            "windows": "start steam://",
-            "linux": "steam",
-            "darwin": "open -a Steam",
-            "processes": ["steam.exe", "steam"]
-        },
-        "steam": {
+        "с тим": {
             "windows": "start steam://",
             "linux": "steam",
             "darwin": "open -a Steam",
@@ -400,45 +287,11 @@ applications_data = {
             "darwin": "open -a Photoshop",
             "processes": ["photoshop.exe", "gimp"]
         },
-        "gimp": {
-            "windows": "gimp",
-            "linux": "gimp",
-            "darwin": "open -a GIMP",
-            "processes": ["gimp.exe", "gimp"]
-        },
         "рисование": {
             "windows": "mspaint",
             "linux": "kolourpaint",
             "darwin": "Preview",
             "processes": ["mspaint.exe", "kolourpaint"]
         },
-        
-        # Файловые менеджеры
-        "файлы": {
-            "windows": "explorer",
-            "linux": "nautilus",
-            "darwin": "Finder",
-            "processes": ["explorer.exe", "nautilus"]
-        },
-        "проводник windows": {
-            "windows": "explorer",
-            "linux": "nautilus",
-            "darwin": "Finder",
-            "processes": ["explorer.exe", "nautilus"]
-        },
-        
-        # Разное
-        "адресная книга": {
-            "windows": "wab",
-            "linux": "evolution",
-            "darwin": "open -a Contacts",
-            "processes": ["wab.exe", "evolution"]
-        },
-        "контакты": {
-            "windows": "wab",
-            "linux": "evolution",
-            "darwin": "open -a Contacts",
-            "processes": ["wab.exe", "evolution"]
-        }
 }
     

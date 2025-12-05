@@ -111,9 +111,7 @@ class Core:
         except Exception as e:
             self.logger.critical(f"[Core] Ошибка обработки команды: {e}")
         finally:
-            if self.state_manager.get_state() == self.state_manager.PROCESSING:
-                self.command = None
-                await self.state_manager.change_state(self.state_manager.LISTENING)
+            await self.state_manager.change_state(self.state_manager.LISTENING)
 
     async def start(self):
         """Асинхронный запуск ядра."""

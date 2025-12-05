@@ -8,8 +8,8 @@ class JokeModule(Module):
     def __init__(self, astra_manager):
         super().__init__(astra_manager)
         self.logger = logging.getLogger(__name__)
+        self.module_name = self.get_name()
         
-        # API endpoints
         self.official_joke_api = "https://official-joke-api.appspot.com"
         self.chuck_norris_api = "https://api.chucknorris.io"
         
@@ -33,9 +33,6 @@ class JokeModule(Module):
             "разработчик": "programming",
             "айти": "programming"
         }
-
-    def get_name(self) -> str:
-        return "JokeModule"
     
     async def on_context_cleared(self, event_data=None):
         pass
@@ -63,21 +60,14 @@ class JokeModule(Module):
                 joke = await self._get_programming_joke()
             else:
                 # Случайная шутка из любого API
-                joke = await self._get_random_joke()
+                joke = await  self._get_official_joke()
             
             return joke
             
         except Exception as e:
-            self.logger.error(f"Ошибка при получении шутки: {e}")
+            self.logger.error(f"[Jokes] Ошибка при получении шутки: {e}")
             return "Извините, не могу найти шутку. Попробуйте позже!"
-    
-    async def _get_random_joke(self) -> str:
-        """Получить случайную шутку из любого API"""
-        # Случайно выбираем API
-        if random.choice([True, False]):
-            return await self._get_official_joke()
-        else:
-            return await self._get_chuck_norris_joke()
+
     
     async def _get_programming_joke(self) -> str:
         """Получить шутку про программистов"""
@@ -94,7 +84,7 @@ class JokeModule(Module):
                             joke = data[0]
                             return f"{joke['setup']}\n...\n{joke['punchline']}"
         except Exception as e:
-            self.logger.debug(f"Official Joke API не ответил: {e}")
+            self.logger.debug(f"[Jokes] Official Joke API не ответил: {e}")
         
         # Если Official API не сработал, пробуем Chuck Norris (категория dev)
         try:
@@ -107,7 +97,7 @@ class JokeModule(Module):
                         data = await response.json()
                         return data['value']
         except Exception as e:
-            self.logger.debug(f"Chuck Norris API не ответил: {e}")
+            self.logger.debug(f"[Jokes] Chuck Norris API не ответил: {e}")
         
         # Если оба API не работают, возвращаем запасную шутку
         backup_jokes = [
@@ -133,7 +123,7 @@ class JokeModule(Module):
                     else:
                         raise Exception(f"HTTP {response.status}")
         except Exception as e:
-            self.logger.debug(f"Official Joke API error: {e}")
+            self.logger.debug(f"[Jokes] Official Joke API error: {e}")
             # Пробуем другую категорию
             category = random.choice(self.official_categories)
             return await self._get_official_joke_by_category(category)
@@ -156,46 +146,10 @@ class JokeModule(Module):
                     else:
                         raise Exception(f"HTTP {response.status}")
         except Exception as e:
-            self.logger.debug(f"Official Joke API category error: {e}")
+            self.logger.debug(f"[Jokes] Official Joke API category error: {e}")
             # Если не получилось, возвращаем случайную шутку из запасных
             return await self._get_backup_joke()
     
-    async def _get_chuck_norris_joke(self) -> str:
-        """Получить шутку про Чака Норриса"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.chuck_norris_api}/jokes/random",
-                    timeout=aiohttp.ClientTimeout(total=3)
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['value']
-                    else:
-                        raise Exception(f"HTTP {response.status}")
-        except Exception as e:
-            self.logger.debug(f"Chuck Norris API error: {e}")
-            # Пробуем случайную категорию
-            category = random.choice(self.chuck_categories)
-            return await self._get_chuck_norris_joke_by_category(category)
-    
-    async def _get_chuck_norris_joke_by_category(self, category: str) -> str:
-        """Получить шутку про Чака Норриса по категории"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{self.chuck_norris_api}/jokes/random?category={category}",
-                    timeout=aiohttp.ClientTimeout(total=3)
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data['value']
-                    else:
-                        raise Exception(f"HTTP {response.status}")
-        except Exception as e:
-            self.logger.debug(f"Chuck Norris API category error: {e}")
-            # Если не получилось, возвращаем случайную шутку из запасных
-            return await self._get_backup_joke()
     
     async def _get_backup_joke(self) -> str:
         """Запасные шутки на случай недоступности API"""
@@ -208,10 +162,3 @@ class JokeModule(Module):
             "Почему программисты не любят природу? - Слишком много багов!"
         ]
         return random.choice(backup_jokes)
-    
-    async def get_categories(self) -> Dict[str, List[str]]:
-        """Получить список доступных категорий"""
-        return {
-            "official_joke_api": self.official_categories,
-            "chuck_norris_api": self.chuck_categories
-        }

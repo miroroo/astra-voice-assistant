@@ -32,7 +32,6 @@ class TextWindow(QWidget):
             border-radius: 15px;
         """)
 
-
         # Элемент текста
         self.label = QLabel("—")
         self.label.setFont(QFont("Arial", 18))

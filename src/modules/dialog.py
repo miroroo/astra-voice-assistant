@@ -1,7 +1,6 @@
 import random
 from .module import Module
 
-
 class DialogModule(Module):
     """Модуль для диалогового взаимодействия с пользователем."""
     
